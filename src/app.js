@@ -1,24 +1,37 @@
 const express = require("express");
 const app =  express();
-const {adminAuth , userAuth} = require("../middlewares/auth");
+const {connectDB}=require("../src/config/database")
+const User = require("../models/user")
 
-app.use("/admin", adminAuth)
+app.use(express.json());
 
-app.get("/user/login",(req,res)=>{
-    res.send(("Loggeg In Successfullyy!!"))
+
+app.post("/signup",async (req,res)=>{
+ try{
+    const body = req.body;
+    const user = await User.create({
+        firstName : body.firstName,
+        lastName : body.lastName,
+        email : body.email,
+        password: body.password,
+        age: body.age,
+        gender : body.gender,
+       
+    })
+    res.send(user);
+ }
+ catch(err){
+    console.log(err);
+    
+ }
 })
 
-app.get("/user",userAuth,(req,res)=>{
-    res.send("User Getted!!")
-})
-
-app.get("/admin/getAllData",(req,res)=>{
-    //logic
-    res.send("All Data Sent")
-})
-
-app.get("/admin/delete",(req,res)=>{
-res.send("User Deleted")
-})
-
-app.listen(7777,()=>console.log("Server is Successfully Started!!"))
+connectDB().then(()=>{
+    console.log("DB Connected Successfully!!");
+    
+    app.listen(7777,()=>console.log("Server is Successfully Started!!"))
+    
+    }).catch((err)=>{
+    console.log("DB Connection Error");
+    
+    })
