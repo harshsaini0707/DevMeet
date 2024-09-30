@@ -61,8 +61,9 @@ app.delete("/user",async (req,res)=>{
 
 app.patch("/edit",async (req,res)=>{
    const id = req.body._id;
+   const data = req.body;
    try {
-      await User.findByIdAndUpdate({_id:id }, {firstName : "Java"})
+      await User.findByIdAndUpdate({_id:id },data)
       res.json({upadate: "Sucessfully updated!!"})
    } catch (error) {
       res.send(error)
