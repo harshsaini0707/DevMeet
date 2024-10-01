@@ -17,10 +17,16 @@ const userSchema  = new mongoose.Schema({
         required : true,
         unique: true,
         trim:true,
+        validator(value){
+        if(!validator.isEmail(value)) throw new Error(value +" Not a valid Email")
+        }
     },
     password:{
         type : String,
         required : true,
+        validator(value){
+            if(!validator.isStrongPassword(value)) throw new Error(value +" Not a Strong Password")
+            }
     },
     age:{
         type : Number,
@@ -42,12 +48,15 @@ const userSchema  = new mongoose.Schema({
     },
     photoUrl:{
         type:String,
+        validator(value){
+            if(!validator.isURL(value)) throw new Error(value +" Not a valid URL")
+            }
     },
     about:{
         type:String,
         default:"This is a default added by me"
     }
-}, {timestamps : true})
+}, {timestamps : true })
 
 const User = mongoose.model("User",userSchema);
 module.exports = User;
