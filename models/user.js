@@ -1,62 +1,72 @@
 const mongoose = require("mongoose");
+const validator = require('validator');
 
-const userSchema  = new mongoose.Schema({
-    firstName:{
-        type : String,
-        required : true,
-        
-    },
-    lastName:{
-        type : String,
-        required : true,
-        minLength:2,
-        maxLength:50,
-    },
-    email:{
+const userSchema = new mongoose.Schema({
+    firstName: {
         type: String,
-        required : true,
-        unique: true,
+        required: true,
         trim:true,
-        validator(value){
-        if(!validator.isEmail(value)) throw new Error(value +" Not a valid Email")
-        }
+        minLength: 2,
+        maxLength: 50,
     },
-    password:{
-        type : String,
-        required : true,
-        validator(value){
-            if(!validator.isStrongPassword(value)) throw new Error(value +" Not a Strong Password")
+    lastName: {
+        type: String,
+        required: true,
+        trim:true,
+        minLength: 2,
+        maxLength: 50,
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true,
+        validate(value) { 
+            if (!validator.isEmail(value)) {
+                throw new Error(value + " is not a valid Email");
             }
-    },
-    age:{
-        type : Number,
-        required : true,
-        min:18,
-        max:80,
-    
-    },
-    gender:{
-        type : String,
-        lowercase: true,
-        validate(value){
-            if(!["male","female","others"].includes(value))  throw new Error("This Gender is not allowed") 
         },
     },
-    skills:{
-        type : [String],
-
-    },
-    photoUrl:{
-        type:String,
-        validator(value){
-            if(!validator.isURL(value)) throw new Error(value +" Not a valid URL")
+    password: {
+        type: String,
+        required: true,
+        validate(value) {  
+            if (!validator.isStrongPassword(value)) {
+                throw new Error(value + " is not a strong password");
             }
+        },
     },
-    about:{
-        type:String,
-        default:"This is a default added by me"
+    age: {
+        type: Number,
+       
+        min: 18,
+        max: 80,
+    },
+    gender: {
+        type: String,
+        lowercase: true,
+        validate(value) {
+            if (!["male", "female", "others"].includes(value)) {
+                throw new Error(value + " is not an allowed gender");
+            }
+        },
+    },
+    skills: {
+        type: [String],
+    },
+    photoUrl: {
+        type: String,
+        validate(value) {  
+            if (!validator.isURL(value)) {
+                throw new Error(value + " is not a valid URL");
+            }
+        },
+    },
+    about: {
+        type: String,
+        default: "This is a default added by me",
     }
-}, {timestamps : true })
+}, { timestamps: true });
 
-const User = mongoose.model("User",userSchema);
+const User = mongoose.model("User", userSchema);
 module.exports = User;
