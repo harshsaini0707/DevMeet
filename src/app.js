@@ -5,8 +5,11 @@ const User = require("../models/user")
 const{validateSignupData} = require("../utils/validation")
 const bcrypt  = require('bcrypt');
 const validator = require('validator');
+const cookieParser = require("cookie-parser")
+const jwt = require("jsonwebtoken");
 
 app.use(express.json());
+app.use(cookieParser());
 
 
 app.post("/signup",async (req,res)=>{
@@ -50,6 +53,14 @@ app.post("/login", async (req,res)=>{
    //return boolean 
    const isValidPassword = await bcrypt.compare(password,user.password);
    if(isValidPassword){
+       
+      //Create a JWT token
+       const token = await jwt.sign({_id:user.id},"Dev@123Meet");
+       console.log(token);
+       
+      //Add the token to the cookie and send the response back to user
+      res.cookie("userToken",token);
+
       res.send("Login Successfull")
    }else{
       res.send("Invalid Crendential!!")
@@ -59,6 +70,33 @@ app.post("/login", async (req,res)=>{
   }catch(err){
    res.send("ERROR " +err.message);
    }
+
+})
+
+app.get("/profile", async (req,res)=>{
+
+   try{
+
+      const cookies =  req.cookies; //give all the cookies
+      const token = cookies?.userToken;
+      if(!token){
+         throw new Error("Token is Not Valid!!")
+      }
+      //validate token
+       const decodedMessage = await jwt.verify(token,"Dev@123Meet");
+       console.log(decodedMessage);
+
+       const {_id} = decodedMessage;
+       console.log("Logged In User is: "+_id);
+       
+       const user = await User.findById({_id});
+       if(!user) throw new Error("Login Again");
+       console.log(cookies);
+       res.send(user)
+   }catch(err){
+      res.send("ERROR " +err.message);
+   }
+   
 
 })
 
