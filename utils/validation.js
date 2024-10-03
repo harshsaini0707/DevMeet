@@ -7,9 +7,9 @@ const validateSignupData = (req)=>{
     else if(!validator.isEmail(email)){
         throw new Error("Email is not valid")
     }
-    else if(!validator.isStrongPassword(password)){
-        throw new Error("Create a strong password")
-    }
+    // else if(!validator.isStrongPassword(password)){
+    //     throw new Error("Create a strong password")
+    // }
 
 
    

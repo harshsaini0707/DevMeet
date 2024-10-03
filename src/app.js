@@ -7,6 +7,7 @@ const bcrypt  = require('bcrypt');
 const validator = require('validator');
 const cookieParser = require("cookie-parser")
 const jwt = require("jsonwebtoken");
+const {userAuth} = require("../middlewares/auth")
 
 app.use(express.json());
 app.use(cookieParser());
@@ -55,11 +56,11 @@ app.post("/login", async (req,res)=>{
    if(isValidPassword){
        
       //Create a JWT token
-       const token = await jwt.sign({_id:user.id},"Dev@123Meet");
+       const token = await jwt.sign({_id:user.id},"Dev@123Meet",{expiresIn : "1d"});
        console.log(token);
        
       //Add the token to the cookie and send the response back to user
-      res.cookie("userToken",token);
+      res.cookie("userToken",token,{httpOnly : true});
 
       res.send("Login Successfull")
    }else{
@@ -73,25 +74,10 @@ app.post("/login", async (req,res)=>{
 
 })
 
-app.get("/profile", async (req,res)=>{
+app.get("/profile",userAuth, async (req,res)=>{
 
    try{
-
-      const cookies =  req.cookies; //give all the cookies
-      const token = cookies?.userToken;
-      if(!token){
-         throw new Error("Token is Not Valid!!")
-      }
-      //validate token
-       const decodedMessage = await jwt.verify(token,"Dev@123Meet");
-       console.log(decodedMessage);
-
-       const {_id} = decodedMessage;
-       console.log("Logged In User is: "+_id);
-       
-       const user = await User.findById({_id});
-       if(!user) throw new Error("Login Again");
-       console.log(cookies);
+       const user = req.user;
        res.send(user)
    }catch(err){
       res.send("ERROR " +err.message);
@@ -100,44 +86,19 @@ app.get("/profile", async (req,res)=>{
 
 })
 
-app.get("/user",async(req,res)=>{
-   const userEmail = req.body.email;
-  
-   try {
+app.post("/sendConnectionRequest",userAuth,(req,res)=>{
 
-   const feed =  await User.find({email : userEmail});
-
-   if(!feed.length){
-     res.status(404).json({status:"Error Email not found"})
-   }else  return res.json(feed);
-
-   } catch (err) {
-      res.send(err);
-   }
-   
-  })
+   console.log("Sending Connection Request");
+   const user = req.user;
 
 
-app.get("/feed",async(req,res)=>{
- 
- try {
-   const feed = await User.find({});
-    res.json({feed});
- } catch (err) {
-   res.send(err);
- }
-})
-app.delete("/user",async (req,res)=>{
-   const id = req.body._id;
-   try {
-   
-   const user = await User.findByIdAndDelete(id);
-   res.send({status :"Successfully User Deleted!!"})
-   } catch (error) {
-      res.send(error);
-   }
+   return res.send(user.firstName+" is Sending a Connection Reques!!")
    
 })
+
+
+
+
 
 app.patch("/user/:userId",async (req,res)=>{
 
