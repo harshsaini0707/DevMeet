@@ -2,97 +2,20 @@ const express = require("express");
 const app =  express();
 const {connectDB}=require("../src/config/database")
 const User = require("../models/user")
-const{validateSignupData} = require("../utils/validation")
-const bcrypt  = require('bcrypt');
-const validator = require('validator');
 const cookieParser = require("cookie-parser")
-const {userAuth} = require("../middlewares/auth")
 
 app.use(express.json());
 app.use(cookieParser());
 
+const authRouter = require("./routes/auth");
+const profileRouter = require("./routes/profile");
+const requestRouter = require("./routes/requests");
 
-app.post("/signup",async (req,res)=>{
-
- try{
-   //Validation of data
-   validateSignupData(req);
-   //Encrypt the password -> Store
-   const{firstName , lastName , email ,password} = req.body;
-   const passwordHashed = await bcrypt.hash(password,10);
-   console.log(passwordHashed);
-   
-   //Creating a instance of  User Model
-   const user = new User({
-      firstName,lastName,email,password : passwordHashed ,
-   });
-
-    await user.save();
-    return res.json(user);
- }
- catch(error){
-    res.send("ERROR " +error.message);
-    
- }
-})
-
-app.post("/login", async (req,res)=>{
-   try{
-
-  const {email,password} = req.body;
-
-  if(!validator.isEmail(email)){
-   throw new Error("Email is not valid")
-  }
-   
-   const user = await User.findOne({email:email});
-   if(!user){
-      res.send("Invalid Crendential!!")
-   }
-   
-   //return boolean 
-   const isValidPassword = await user.validatePassword(password);
-
-   if(isValidPassword){
-      //Get token 
-      const token = await user.getJWT();
-       
-      //Add the token to the cookie and send the response back to user
-      res.cookie("userToken",token,{httpOnly : true});
-
-      res.send("Login Successfull")
-   }else{
-      res.send("Invalid Crendential!!")
-   }
+app.use("/",authRouter);
+app.use("/",profileRouter);
+app.use("/",requestRouter);
 
 
-  }catch(err){
-   res.send("ERROR " +err.message);
-   }
-
-})
-
-app.get("/profile",userAuth, async (req,res)=>{
-
-   try{
-       const user = req.user;
-       res.send(user)
-   }catch(err){
-      res.send("ERROR " +err.message);
-   }
-   
-
-})
-
-app.post("/sendConnectionRequest",userAuth,(req,res)=>{
-
-   console.log("Sending Connection Request");
-   const user = req.user;
-
-
-   return res.send(user.firstName+" is Sending a Connection Reques!!")
-   
-})
 
 
 
