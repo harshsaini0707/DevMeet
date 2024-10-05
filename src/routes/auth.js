@@ -12,16 +12,18 @@ authRouter.post("/signup",async (req,res)=>{
       //Validation of data
       validateSignupData(req);
       //Encrypt the password -> Store
-      const{firstName , lastName , email ,password} = req.body;
+      const{firstName , lastName , email ,password , skills , age ,gender , about} = req.body;
       const passwordHashed = await bcrypt.hash(password,10);
       console.log(passwordHashed);
       
       //Creating a instance of  User Model
       const user = new User({
-         firstName,lastName,email,password : passwordHashed ,
+         firstName,lastName,email,age,gender ,about ,  skills , password : passwordHashed ,
       });
    
        await user.save();
+       
+       
        return res.json(user);
     }
     catch(error){
@@ -41,7 +43,7 @@ authRouter.post("/login", async (req,res)=>{
     
     const user = await User.findOne({email:email});
     if(!user){
-       res.send("Invalid Crendential!!")
+      return res.send("Invalid Crendential!!")
     }
     
     //return boolean 
@@ -54,16 +56,23 @@ authRouter.post("/login", async (req,res)=>{
        //Add the token to the cookie and send the response back to user
        res.cookie("userToken",token,{httpOnly : true});
  
-       res.send("Login Successfull")
+       return res.send("Login Successfull")
     }else{
-       res.send("Invalid Crendential!!")
+      return  res.send("Invalid Crendential!!")
     }
  
  
    }catch(err){
-    res.send("ERROR " +err.message);
+    return res.send("ERROR " +err.message);
     }
  
+ })
+
+ authRouter.post("/logout", async (req,res)=>{
+    res.cookie("userToken ",null ,{
+        expires : new Date(Date.now())
+    })
+    res.send("Logout Successfull!!");
  })
 
 module.exports= authRouter;

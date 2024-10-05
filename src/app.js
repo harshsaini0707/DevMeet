@@ -21,30 +21,30 @@ app.use("/",requestRouter);
 
 
 
-app.patch("/user/:userId",async (req,res)=>{
+// app.patch("/user/:userId",async (req,res)=>{
 
 
-   const id = req.params?.userId;
-   const data = req.body;
+//    const id = req.params?.userId;
+//    const data = req.body;
    
-   try { 
-      const ALLOWED_UPDATES = ["skills","age","gender","photoUrl","about"];
+//    try { 
+//       const ALLOWED_UPDATES = ["skills","age","gender","photoUrl","about"];
       
-      const isUpdateAllowed = Object.keys(data).every((k)=>{
-       return  ALLOWED_UPDATES.includes(k);
-      })
-      if(!isUpdateAllowed) res.status(400).send("Update Not Allowed");
+//       const isUpdateAllowed = Object.keys(data).every((k)=>{
+//        return  ALLOWED_UPDATES.includes(k);
+//       })
+//       if(!isUpdateAllowed) res.status(400).send("Update Not Allowed");
 
-      if(data?.skills.length > 10) res.status(400).send("Only 10 Skills you add");
+//       if(data?.skills.length > 10) res.status(400).send("Only 10 Skills you add");
 
 
-      await User.findByIdAndUpdate({_id:id },data , {runValidators:true})
-      res.json({upadate: "Sucessfully updated!!"})
+//       await User.findByIdAndUpdate({_id:id },data , {runValidators:true})
+//       res.json({upadate: "Sucessfully updated!!"})
 
-   } catch (error) {
-      res.send(error)
-   }
-})
+//    } catch (error) {
+//       res.send(error)
+//    }
+// })
 
 
 connectDB().then(()=>{

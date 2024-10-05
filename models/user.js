@@ -53,9 +53,6 @@ const userSchema = new mongoose.Schema({
             }
         },
     },
-    skills: {
-        type: [String],
-    },
     photoUrl: {
         type: String,
         validate(value) {  
@@ -63,6 +60,10 @@ const userSchema = new mongoose.Schema({
                 throw new Error(value + " is not a valid URL");
             }
         },
+    },
+    skills: {
+        type: [String],
+        default : []
     },
     about: {
         type: String,
