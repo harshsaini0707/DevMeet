@@ -71,6 +71,8 @@ const userSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
+userSchema.index({firstName : 1})
+
 userSchema.methods.getJWT = async function () {
      const user = this;
       //Create a JWT token
@@ -79,6 +81,7 @@ userSchema.methods.getJWT = async function () {
 
       return token;
 }
+
 
 userSchema.methods.validatePassword = async function (passwordInputByUser) {
     const user = this;
