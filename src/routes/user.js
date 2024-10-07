@@ -1,6 +1,7 @@
 const express = require("express");
 const { userAuth } = require("../../middlewares/auth");
 const ConnectionRequestModel = require("../../models/connectionRequest");
+const User = require("../../models/user");
 const userRouter = express.Router();
 
 userRouter.get("/user/request/recevied" , userAuth, async (req,res)=>{
@@ -34,11 +35,48 @@ userRouter.get("/user/connections" ,userAuth , async (req,res) =>{
             {fromUserId : loggedInUser._id , status : "accepted"},
 
         ],
-    }).populate("fromUserId" , "firstName lastName photoUrl age skills ")
+    }).populate("fromUserId" , "firstName lastName photoUrl age skills ").populate("toUserId" , "firstName lastName photoUrl age skills " );
+    const data = connectionRequest.map((row) => {
 
-    return res.json({data : connectionRequest})
+        if(row.fromUserId._id.toString() === loggedInUser._id){
+            return row.toUserId;
+        }else return row.fromUserId;
+    })
+
+    return res.json({data})
     } catch (error) {
         return res.status(404).send("ERROR "+ error.message)
+    }
+})
+
+userRouter.get("/feed" , async (req,res) =>{
+    try {
+        const loggedInUser =  req.user;
+
+        //Find all connection that i have send or recevied
+        const connectionRequest =  await ConnectionRequestModel.find({
+            $or :[
+                {fromUserId : loggedInUser._id },
+                {toUserId : loggedInUser._id}
+            ]
+        }).select("fromUserId  toUserId").populate("fromUserId", "firstName").populate("toUserId","firstName")
+       
+        const hideUserFromFeed = new Set();
+        connectionRequest.forEach((req) => {
+         hideUserFromFeed.add(req.fromUserId.toString())
+         hideUserFromFeed.add(req.toUserId.toString())
+        });
+
+        const users = await User.find({
+            $and:[
+                {_id : {$nin : Array.from(hideUserFromFeed)}},
+                {_id : {$ne : loggedInUser._id}}
+            ]
+        }).select(["firstName" , "lastName" , "photourl" , "skills", "age"])
+        res.send(users)
+  
+    } catch (error) {
+         return res.status(404).send("ERROR "+ error.message)
     }
 })
 
