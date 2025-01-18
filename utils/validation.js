@@ -10,7 +10,6 @@ const validateSignupData = (req)=>{
     //     throw new Error("Create a strong password")
     // }
 
-
    
 };
 const validateEditUserData = (req) =>{

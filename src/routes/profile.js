@@ -16,7 +16,7 @@ profileRouter.get("/profile/view",userAuth, async (req,res)=>{
  
  })
 
- profileRouter.patch("/profile/edit",userAuth , async (req,res)=>{
+profileRouter.patch("/profile/edit",userAuth , async (req,res)=>{
      try {
         if(!validateEditUserData(req)){
           return  res.status(400).send("Invalid Edit Request")
@@ -25,11 +25,12 @@ profileRouter.get("/profile/view",userAuth, async (req,res)=>{
         
         
         //Now Changing In DB
-        Object.keys(req.body).every((key) =>{
-            loggedinUser[key] =  req.body[key]
-        })
+        Object.keys(req.body).forEach((key) => {
+            loggedinUser[key] = req.body[key];
+        });
+        
         await loggedinUser.save();
-        console.log(loggedinUser);
+        
         
 
        return  res.json({loggedinUser})

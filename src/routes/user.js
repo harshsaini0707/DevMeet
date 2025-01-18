@@ -13,7 +13,7 @@ userRouter.get("/user/request/recevied" , userAuth, async (req,res)=>{
         toUserId : loggedInUser._id,
         status : "interested"
 
-    }).populate("fromUserId" , ["firstName" , "lastName" , "photourl" , "skills", "age"])
+    }).populate("fromUserId" , ["firstName" , "lastName" , "photourl" , "skills", "age" , "about","gender"])
 
         return res.status(200).json({
             message : "Data fetch sucessfully",
@@ -35,7 +35,7 @@ userRouter.get("/user/connections" ,userAuth , async (req,res) =>{
             {fromUserId : loggedInUser._id , status : "accepted"},
 
         ],
-    }).populate("fromUserId" , "firstName lastName photoUrl age skills ").populate("toUserId" , "firstName lastName photoUrl age skills " );
+    }).populate("fromUserId" , "firstName lastName photoUrl age skills about gender ").populate("toUserId" , "firstName lastName photoUrl age skills " );
     const data = connectionRequest.map((row) => {
 
         if(row.fromUserId._id.toString() === loggedInUser._id){
@@ -49,42 +49,91 @@ userRouter.get("/user/connections" ,userAuth , async (req,res) =>{
     }
 })
 
-userRouter.get("/feed" , async (req,res) =>{
-    try {
-        const loggedInUser =  req.user;
+// userRouter.get("/feed" ,userAuth, async (req,res) =>{ 
+//     try {
+//         const loggedInUser =  req.user;
 
-        const page = parseInt(req.query.page) || 1;
-        let  limit = parseInt(req.query.limit) || 10;
-        limit = limit>50 ? 50 : limit;
-        const skip =  ( page -1 ) * limit;
+//         const page = parseInt(req.query.page) || 1;
+//         let  limit = parseInt(req.query.limit) || 10;
+//         limit = limit>50 ? 50 : limit;
+//         const skip =  ( page -1 ) * limit;
 
         
 
-        //Find all connection that i have send or recevied
-        const connectionRequest =  await ConnectionRequestModel.find({
-            $or :[
-                {fromUserId : loggedInUser._id },
-                {toUserId : loggedInUser._id}
-            ]
-        }).select("fromUserId  toUserId").populate("fromUserId", "firstName").populate("toUserId","firstName")
+//         //Find all connection that i have send or recevied connection
+//         const connectionRequest =  await ConnectionRequestModel.find({
+//             $or :[
+//                 {fromUserId : loggedInUser._id },
+//                 {toUserId : loggedInUser._id}  
+//             ]
+//         }).select("fromUserId  toUserId").populate("fromUserId", "firstName ").populate("toUserId","firstName")
        
+//         const hideUserFromFeed = new Set();
+//         connectionRequest.forEach((req) => {
+//          hideUserFromFeed.add(req.fromUserId.toString())
+//          hideUserFromFeed.add(req.toUserId.toString())
+//         }); 
+
+//            // Convert to ObjectId
+//            const hiddenIds = Array.from(hideUserFromFeed).map(id => new  ObjectId(id));
+
+//         const users = await User.find({
+//             $and:[
+//                 {_id : {$nin : Array.from(hideUserFromFeed)}},
+//                 {_id : {$ne : loggedInUser._id}}
+//             ]
+//         }).select(["firstName" , "lastName" , "photoUrl" , "skills", "age","gender","about"]).skip(skip).limit(limit)
+//         return res.send(users);
+  
+//     } catch (error) {
+//          return res.status(404).send("ERROR "+ error.message)
+//     }
+// })
+const { Types: { ObjectId } } = require('mongoose');
+
+userRouter.get("/feed", userAuth, async (req, res) => {
+    try {
+        const loggedInUser = req.user;
+
+        const page = parseInt(req.query.page) || 1;
+        let limit = parseInt(req.query.limit) || 10;
+        limit = limit > 50 ? 50 : limit;
+        const skip = (page - 1) * limit;
+
+        // Find all connections that I have sent or received
+        const connectionRequest = await ConnectionRequestModel.find({
+            $or: [
+                { fromUserId: loggedInUser._id },
+                { toUserId: loggedInUser._id }
+            ]
+        }).select("fromUserId toUserId")
+          .populate("fromUserId", "firstName")
+          .populate("toUserId", "firstName");
+
         const hideUserFromFeed = new Set();
         connectionRequest.forEach((req) => {
-         hideUserFromFeed.add(req.fromUserId.toString())
-         hideUserFromFeed.add(req.toUserId.toString())
+            hideUserFromFeed.add(req.fromUserId.toString());
+            hideUserFromFeed.add(req.toUserId.toString());
         });
 
+        // Filter and convert only valid ObjectId strings
+        const hiddenIds = Array.from(hideUserFromFeed).filter(id => ObjectId.isValid(id)).map(id =>  ObjectId(id));
+
         const users = await User.find({
-            $and:[
-                {_id : {$nin : Array.from(hideUserFromFeed)}},
-                {_id : {$ne : loggedInUser._id}}
+            $and: [
+                { _id: { $nin: hiddenIds } },
+                { _id: { $ne: loggedInUser._id } }
             ]
-        }).select(["firstName" , "lastName" , "photourl" , "skills", "age"]).skip(skip).limit(limit)
-        res.send(users)
-  
+        }).select(["firstName", "lastName", "photoUrl", "gender", "skills", "age", "about","status"])
+          .skip(skip)
+          .limit(limit);
+
+        return res.send(users);
+
     } catch (error) {
-         return res.status(404).send("ERROR "+ error.message)
+        return res.status(404).send("ERROR " + error.message);
     }
-})
+});
+
 
 module.exports = userRouter;

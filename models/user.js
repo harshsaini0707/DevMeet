@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const validator = require('validator');
 const bcrypt  = require('bcrypt');
 const jwt = require("jsonwebtoken");    
+require("dotenv").config();
 
 const userSchema = new mongoose.Schema({
     firstName: {
@@ -47,8 +48,9 @@ const userSchema = new mongoose.Schema({
     gender: {
         type: String,
         lowercase: true,
+        //enum can be
         validate(value) {
-            if (!["male", "female", "others"].includes(value)) {
+            if (!["male", "female", "other","Male", "Female", "Other"].includes(value)) {
                 throw new Error(value + " is not an allowed gender");
             }
         },
@@ -71,12 +73,12 @@ const userSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-userSchema.index({firstName : 1})
+userSchema.index({firstName : 1}) //or just index:true 
 
 userSchema.methods.getJWT = async function () {
      const user = this;
       //Create a JWT token
-      const token = await jwt.sign({_id:user.id},"Dev@123Meet",{expiresIn : "1d"});
+      const token = await jwt.sign({_id:user.id},process.env. JWT_SECRET_KEY,{expiresIn : "1d"});
       console.log(token);
 
       return token;

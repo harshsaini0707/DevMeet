@@ -1,9 +1,16 @@
 const express = require("express");
 const app =  express();
-const {connectDB}=require("../src/config/database")
-const User = require("../models/user")
-const cookieParser = require("cookie-parser")
+require("dotenv").config();
 
+const {connectDB}=require("../src/config/database")
+
+const cookieParser = require("cookie-parser")
+const cors = require("cors")
+
+app.use(cors({ //white labeling
+    origin:"http://localhost:5173" ,// where is our frontend is hosted
+    credentials:true,
+}))
 app.use(express.json());
 app.use(cookieParser());
 
@@ -15,12 +22,7 @@ const userRouter = require("./routes/user");
 app.use("/",authRouter);
 app.use("/",profileRouter);
 app.use("/",requestRouter);
-app.use("/" ,userRouter)
-
-
-
-
-
+app.use("/" ,userRouter);
 
 
 // app.patch("/user/:userId",async (req,res)=>{
@@ -52,7 +54,7 @@ app.use("/" ,userRouter)
 connectDB().then(()=>{
     console.log("DB Connected Successfully!!");
     
-    app.listen(7777,()=>console.log("Server is Successfully Started!!"))
+    app.listen(process.env.PORT,()=>console.log("Server is Successfully Started!!"))
     
     }).catch((err)=>{
     console.log("DB Connection Error");
