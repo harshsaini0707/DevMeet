@@ -7,6 +7,9 @@ const {connectDB}=require("../src/config/database")
 const cookieParser = require("cookie-parser")
 const cors = require("cors")
 
+
+
+
 app.use(cors({ //white labeling
     origin:"http://localhost:5173" ,// where is our frontend is hosted
     credentials:true,
@@ -18,6 +21,8 @@ const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
 const requestRouter = require("./routes/requests");
 const userRouter = require("./routes/user");
+const exp = require("constants");
+const { initialiseSocket } = require("./routes/socket.io");
 
 app.use("/",authRouter);
 app.use("/",profileRouter);
@@ -50,11 +55,15 @@ app.use("/" ,userRouter);
 //    }
 // })
 
+const http = require("http");
+const server = http.createServer(app);
+initialiseSocket(server)
+
 
 connectDB().then(()=>{
     console.log("DB Connected Successfully!!");
     
-    app.listen(process.env.PORT,()=>console.log("Server is Successfully Started!!"))
+    server.listen(process.env.PORT,()=>console.log("Server is Successfully Started!!"))
     
     }).catch((err)=>{
     console.log("DB Connection Error");

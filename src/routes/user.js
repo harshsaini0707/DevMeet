@@ -119,7 +119,7 @@ userRouter.get("/feed", userAuth, async (req, res) => {
               { _id: { $ne: loggedInUser._id } },
             ],
           })
-            .select(USER_SAFE_DATA)
+            .select("firstName lastName")
             .skip(skip)
             .limit(limit);
       
