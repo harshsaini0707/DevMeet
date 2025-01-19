@@ -38,7 +38,7 @@ userRouter.get("/user/connections" ,userAuth , async (req,res) =>{
     }).populate("fromUserId" , "firstName lastName photoUrl age skills about gender ").populate("toUserId" , "firstName lastName photoUrl age skills " );
     const data = connectionRequest.map((row) => {
 
-        if(row.fromUserId._id.toString() === loggedInUser._id){
+        if(row.fromUserId._id.toString() === loggedInUser._id.toString()){
             return row.toUserId;
         }else return row.fromUserId;
     })
@@ -48,7 +48,6 @@ userRouter.get("/user/connections" ,userAuth , async (req,res) =>{
         return res.status(404).send("ERROR "+ error.message)
     }
 })
-
 // userRouter.get("/feed" ,userAuth, async (req,res) =>{ 
 //     try {
 //         const loggedInUser =  req.user;
@@ -89,8 +88,6 @@ userRouter.get("/user/connections" ,userAuth , async (req,res) =>{
 //          return res.status(404).send("ERROR "+ error.message)
 //     }
 // })
-const { Types: { ObjectId } } = require('mongoose');
-
 userRouter.get("/feed", userAuth, async (req, res) => {
     try {
         const loggedInUser = req.user;
@@ -116,17 +113,16 @@ userRouter.get("/feed", userAuth, async (req, res) => {
             hideUserFromFeed.add(req.toUserId.toString());
         });
 
-        // Filter and convert only valid ObjectId strings
-        const hiddenIds = Array.from(hideUserFromFeed).filter(id => ObjectId.isValid(id)).map(id =>  ObjectId(id));
-
         const users = await User.find({
             $and: [
-                { _id: { $nin: hiddenIds } },
-                { _id: { $ne: loggedInUser._id } }
-            ]
-        }).select(["firstName", "lastName", "photoUrl", "gender", "skills", "age", "about","status"])
-          .skip(skip)
-          .limit(limit);
+              { _id: { $nin: Array.from(hideUserFromFeed) } },
+              { _id: { $ne: loggedInUser._id } },
+            ],
+          })
+            .select(USER_SAFE_DATA)
+            .skip(skip)
+            .limit(limit);
+      
 
         return res.send(users);
 
@@ -134,6 +130,7 @@ userRouter.get("/feed", userAuth, async (req, res) => {
         return res.status(404).send("ERROR " + error.message);
     }
 });
+
 
 
 module.exports = userRouter;

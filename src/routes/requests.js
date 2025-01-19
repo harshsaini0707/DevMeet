@@ -80,8 +80,6 @@ const User = require("../../models/user")
          { fromUserId, toUserId }, // {} || {}
          { fromUserId: toUserId, toUserId: fromUserId },
        ],
-       // Exclude reviewed requests (accepted or rejected)
-       $nin: [{ status: "accepted" }, { status: "rejected" }],
      });
  
      if (existingConnectionRequest) {
@@ -103,6 +101,7 @@ const User = require("../../models/user")
      return res.send("ERROR: " + error.message);
    }
  });
+ 
 requestRouter.post("/request/review/:status/:requestId" ,userAuth , async (req, res) =>{ 
 
 try {
